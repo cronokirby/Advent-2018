@@ -24,33 +24,15 @@ readPolymer = map convert
       | isUpper c = Unit Upper (toLower c)
       | otherwise = Unit Lower c
 
-showPolymer :: Polymer -> String
-showPolymer = map showUnit
-  where
-    showUnit (Unit Upper c) = toUpper c
-    showUnit (Unit Lower c) = c
-
 
 solve1 :: Polymer -> Int
 solve1 ps = 
-    let p = length ps
-        es = elimBoth ps
-        l  = length es
-    in if p == l then l else solve1 es
+    length $ foldr go [] ps
   where
-    cancel :: [Unit] -> [Unit] -> [Unit]
-    cancel []     []     = []
-    cancel []     (y:ys) = y : cancel [] ys
-    cancel (x:xs) []     = x : cancel xs []
-    cancel (x:xs) (y:ys)
-      | opposite x y = cancel xs ys
-      | otherwise    = x : y : cancel xs ys
-    evens = map snd . filter fst . zip (cycle [True, False])
-    odds  = map snd . filter fst . zip (cycle [False, True])
-    elimLeft xs = cancel (evens xs) (odds xs)
-    elimRight (x:xs) = x : elimLeft xs
-    elimRight xs     = xs
-    elimBoth = elimRight . elimLeft
+    go x []     = [x]
+    go x l@(p:ps)
+      | opposite x p = ps
+      | otherwise    = x : l
 
 solve2 :: Polymer -> Int
 solve2 pl = minimum $ map (\c -> solve1 $ filter (not . ofType c) pl) ['a'..'z']
