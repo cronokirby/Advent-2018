@@ -8,26 +8,27 @@ int opposite(char c1, char c2) {
     return diff == 32 || diff == -32;
 }
 
-int count_canceled(char* data, size_t size) {
-    char** stack = calloc(size, sizeof(char*));
-    for (int i = 0; i < size; ++i) {
-        stack[i] = NULL;
-    }
-    int sp = 0;
+// Stack must be as big as data is long
+int count_canceled(char* data, char** stack, char ignore) {
+    int sp = -1;
     for (; *data != 0; ++data) {
-        if (stack[sp] == NULL) {
+        if (ignore) {
+            char d = ignore - *data;
+            if (d == 0 || d == 32) {
+                continue;
+            }
+        }
+
+        if (sp < 0) {
+            ++sp;
             stack[sp] = data;
         } else if (opposite(*stack[sp], *data)) {
-            stack[sp] = NULL;
-            if (sp > 0) {
-                --sp;
-            }
+            --sp;
         } else {
             ++sp;
             stack[sp] = data;
         }
     }
-    free(stack);
     return sp + 1;
 }
 
@@ -37,30 +38,23 @@ int main() {
     int size = ftell(fp);
     rewind(fp);
     char* data = calloc(size, sizeof(char));
-    char* filtered = calloc(size, sizeof(char));
-    if (fgets(data, size + 1, fp) != NULL) {
-        fclose(fp);
-        int count = count_canceled(data, size);
-        printf("Solution 1: %d\n", count);
-        int min = -1;
-        for (char bad = 'a'; bad <= 'z'; ++bad) {
-            int i = 0;
-            for (char* cp = data;; ++cp) {
-                char c = *cp;
-                if (c == 0) {
-                   filtered[i] == 0;
-                   break; 
-                }
-                if (c != bad && c + 32 != bad) {
-                    filtered[i] = c;
-                    ++i;
-                }
-            }
-            int count = count_canceled(filtered, strlen(filtered));
-            if (min < 0 || count < min) {
-                min = count;
-            }
+    char** stack = calloc(size, sizeof(char*));
+    if (fgets(data, size + 1, fp) == NULL) {
+        return 1;
+    }
+    fclose(fp);
+
+    printf("Solution 1: %d\n", count_canceled(data, stack, 0));
+
+    int min = -1;
+    for (char c = 'a'; c <= 'z'; ++c) {
+        int count = count_canceled(data, stack, c);
+        if (min < 0 || count < min) {
+            min = count;
         }
-        printf("Solution 2: %d\n", min);
-    };
+    }
+    printf("Solution 2: %d\n", min);
+
+    free(data);
+    free(stack);
 }
