@@ -9,7 +9,7 @@ int opposite(char c1, char c2) {
 }
 
 // Stack must be as big as data is long
-int count_canceled(char* data, char** stack, char ignore) {
+int count_canceled(char* data, char* stack, char ignore) {
     int sp = -1;
     for (; *data != 0; ++data) {
         if (ignore) {
@@ -21,12 +21,12 @@ int count_canceled(char* data, char** stack, char ignore) {
 
         if (sp < 0) {
             ++sp;
-            stack[sp] = data;
-        } else if (opposite(*stack[sp], *data)) {
+            stack[sp] = *data;
+        } else if (opposite(stack[sp], *data)) {
             --sp;
         } else {
             ++sp;
-            stack[sp] = data;
+            stack[sp] = *data;
         }
     }
     return sp + 1;
@@ -38,7 +38,7 @@ int main() {
     int size = ftell(fp);
     rewind(fp);
     char* data = calloc(size, sizeof(char));
-    char** stack = calloc(size, sizeof(char*));
+    char* stack = calloc(size, sizeof(char));
     if (fgets(data, size + 1, fp) == NULL) {
         return 1;
     }
