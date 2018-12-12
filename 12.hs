@@ -29,8 +29,7 @@ simulate gens limit (firstRow, rules) =
     go rules n mp start stop acc = 
         let newStart = start - 2
             newStop = stop + 2
-            changes = HM.fromList $ zip [newStart..newStop] ((\i -> evolve rules i mp) <$> [newStart..newStop])
-            newMp = HM.unionWith const changes mp
+            newMp = HM.fromList $ zip [newStart..newStop] ((\i -> evolve rules i mp) <$> [newStart..newStop])
             sm = sum . map fst . filter ((== '#') . snd) $ HM.toList newMp
         in go rules (n - 1) newMp newStart newStop (sm : acc)
            
