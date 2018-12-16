@@ -34,11 +34,12 @@ readTrack (Grid mp) pos char = Grid $ case char of
 data Direction = U | D | L | R deriving (Show)
 
 readDir :: Char -> Maybe Direction
-readDir '^' = Just U
-readDir 'v' = Just D
-readDir '<' = Just L
-readDir '>' = Just R
-readDir _   = Nothing
+readDir = case c of
+    '^' -> Just U
+    'v' -> Just D
+    '<' -> Just L
+    '>' -> Just R
+    _   -> Nothing
 
 rotateCC :: Direction -> Direction
 rotateCC dir = case dir of
@@ -106,10 +107,10 @@ moveCart grid (Cart pos dir turn) =
     let pos' = moveDir dir pos
         track = getTrack grid pos'
     in case track of
-        Straight       -> Cart pos' dir turn
-        TrackTurnF     -> Cart pos' (turnF dir) turn
-        TrackTurnB     -> Cart pos' (turnB dir) turn
-        Intersection   -> Cart pos' (turnDir turn dir) (nextTurn turn)
+        Straight     -> Cart pos' dir turn
+        TrackTurnF   -> Cart pos' (turnF dir) turn
+        TrackTurnB   -> Cart pos' (turnB dir) turn
+        Intersection -> Cart pos' (turnDir turn dir) (nextTurn turn)
 
 
 -- | Remove an element from a list, returning true if an element was removed
@@ -149,7 +150,7 @@ simulate st = let (st', e) = step st in e : simulate st'
             pos = cartPos cart'
             removeCrashes = remove ((== pos) . cartPos)
             (carts', inCarts) = removeCrashes carts
-            (next', inNext) = removeCrashes next
+            (next', inNext)   = removeCrashes next
             found = inCarts || inNext
             event = if found then Crash pos else Tick
             next'' = if found then next' else cart' : next'
