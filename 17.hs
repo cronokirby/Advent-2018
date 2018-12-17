@@ -70,17 +70,17 @@ pprintGrid g@(Grid _ _ mp) =
 getTile :: (Int, Int) -> Grid -> Tile
 getTile pos (Grid maxY minY mp) = HM.lookupDefault Free pos mp
 
-addTile :: (Int, Int) -> Tile -> Grid -> (Bool, Grid)
+addTile :: (Int, Int) -> Tile -> Grid -> Grid
 addTile (x, y) tile g@(Grid maxY minY mp)
-    | y > maxY  = (False, g)
-    | y < minY  = (False, g)
-    | otherwise = (True, Grid maxY minY (HM.insert (x, y) tile mp))
+    | y > maxY  = g
+    | y < minY  = g
+    | otherwise = Grid maxY minY (HM.insert (x, y) tile mp)
 
-addFreeTile :: (Int, Int) -> Tile -> Grid -> (Bool, Grid)
+addFreeTile :: (Int, Int) -> Tile -> Grid -> Grid
 addFreeTile pos tile grid =
     case getTile pos grid of
         Free -> addTile pos tile grid
-        _    -> (False, grid)
+        _    -> grid
 
 getWater :: Grid -> [(Int, Int)]
 getWater = map fst . HM.toList . HM.filter (== Water) . gridMap
@@ -90,41 +90,39 @@ getLiquid = map fst . HM.toList . HM.filter (\x -> x == Water || x == HardWater)
 
 
 flow :: Grid -> Grid
-flow grid =
-    let (_, grid') = addTile (500, max 1 (gridMinY grid)) Water grid
-    in (go 0 grid')
+flow grid = go 0 $ addTile (500, max 1 (gridMinY grid)) Water grid
   where
     go l grid =
         let waters = getWater grid
             w = length waters
-            (inserted, grid') = foldr step (False, grid) waters
-        in traceShow w $ if getLiquid grid /= getLiquid grid' then go w grid' else grid'
+            grid' = foldr step grid waters
+        in if getLiquid grid /= getLiquid grid' then go w grid' else grid'
     under (x, y) = (x, y + 1)
     spreadDir grid [] acc     = (False, acc)
     spreadDir grid (p:ps) acc
         | getTile (under p) grid == Free || getTile (under p) grid == Water = (False, p : acc)
         | getTile p grid == Clay         = (True, acc)
         | otherwise                      = spreadDir grid ps (p:acc)
+    spread :: (Int, Int) -> Grid -> Grid
     spread pos@(x, y) grid =
         let leftPos  = map (\x -> (x, y)) [x,x-1..]
             rightPos = map (\x -> (x, y)) [x,x+1..]
             (clayL, lefts)  = spreadDir grid leftPos []
             (clayR, rights) = spreadDir grid rightPos []
             tile = if clayL && clayR then HardWater else Water
-        in foldr (\pos (inserted, acc) -> let (i, g) = addTile pos tile acc in (i || inserted, g)) (False, grid)
-            (lefts ++ rights)
-    step pos (inserted, grid) =
+        in foldr (\pos -> addTile pos tile) grid (lefts ++ rights)
+    step :: (Int, Int) -> Grid -> Grid
+    step pos grid =
         let down = under pos
             tile = getTile down grid
-            (insertedNow, grid') = case tile of
-                Water     -> (False, grid)
-                HardWater -> spread pos grid
-                Clay      -> spread pos grid
-                Free      -> addTile down Water grid               
-        in (insertedNow || inserted, grid')
-
+        in case tile of
+            Water     -> grid
+            HardWater -> spread pos grid
+            Clay      -> spread pos grid
+            Free      -> addTile down Water grid               
             
 
+solve1 :: Grid -> Int
 solve1 = length . getLiquid . flow
 
 
@@ -132,4 +130,4 @@ main :: IO ()
 main = do
     input <- readInput <$> readFile "17.txt"
     let grid = gridFromInput input
-    putStrLn ("Solution 1:\n" ++ show (solve1 grid))
+    putStrLn ("Solution 1: " ++ show (solve1 grid))
