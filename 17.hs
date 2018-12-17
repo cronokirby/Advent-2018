@@ -53,7 +53,24 @@ insertTile (x, y) tile g@(Grid maxY minY mp)
 getTile :: (Int, Int) -> Grid -> Tile
 getTile pos (Grid maxY minY mp) = HM.lookupDefault Free pos mp
 
+flow :: GridState -> GridState
+flow grid = go grid []
+  where
+    go grid [] = 
+        let pos = (500, 1)
+        in go (insertTile pos Water grid) [pos]
+    go grid waters =
+        let (grid, next) = foldr step (grid, []) waters
+        in go grid next
+    step (x, y) (grid, next) = 
+        let nextPos = (x, y + 1)
+        in case getTile nextPos of
+            Water -> (grid, next)
+            Free  -> (insertTile (x, ))
 
+
+solve1 :: GridState -> Int
+solve1 = let (st')
 main :: IO ()
 main = do
     input <- readInput <$> readFile "17.txt"
