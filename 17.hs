@@ -1,12 +1,10 @@
 {-# LANGUAGE TupleSections #-}
-import Data.Functor (($>))
 import Data.Maybe (fromJust)
-import Control.Monad (filterM, forM_, forM, guard, mapM, unless, when)
+import Control.Monad (filterM, forM_, unless, when)
 import Control.Monad.Loops (firstM)
 import Control.Monad.State (State, execState, gets, modify)
 import qualified Data.HashMap.Strict as HM
-import Text.ParserCombinators.ReadP
-import Debug.Trace
+import Text.ParserCombinators.ReadP (ReadP, readS_to_P, readP_to_S, string, get)
 
 
 type Input = [([Int], [Int])]
