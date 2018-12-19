@@ -1,5 +1,9 @@
-import Control.Applicative ((<|>))
-import Data.List (sort)
+{-# LANGUAGE TupleSections #-}
+import Data.Functor (($>))
+import Data.Maybe (fromJust)
+import Control.Monad (filterM, forM_, forM, guard, mapM, unless, when)
+import Control.Monad.Loops (firstM)
+import Control.Monad.State (State, execState, gets, modify)
 import qualified Data.HashMap.Strict as HM
 import Text.ParserCombinators.ReadP
 import Debug.Trace
@@ -29,105 +33,116 @@ readInput = map (fst . head . readP_to_S parser) . lines
             _   -> fail "Invalid"
 
 
-data Tile = Water | HardWater | Clay | Free deriving (Eq, Show)
+type Pos = (Int, Int)
 
-tileAsChar :: Tile -> Char
-tileAsChar Water = '|'
-tileAsChar HardWater = '~'
-tileAsChar Clay = '#'
-tileAsChar Free = '.'
+up :: Pos -> Pos
+up (x, y) = (x, y - 1)
+
+down :: Pos -> Pos
+down (x, y) = (x, y + 1)
+
+left :: Pos -> Pos
+left (x, y) = (x - 1, y)
+
+right :: Pos -> Pos
+right (x, y) = (x + 1, y)
+
+
+data Tile 
+    = StillWater
+    | Water
+    | Clay
+    | Free
+    deriving (Eq)
 
 isHard :: Tile -> Bool
-isHard Clay      = True
-isHard HardWater = True
+isHard StillWater = True
+isHard Clay       = True
+isHard _          = False
+
+isLiquid :: Tile -> Bool
+isLiquid StillWater = True
+isLiquid Water      = True
+isLiquid _          = False
 
 
-data Grid = Grid
-    { gridMaxY :: Int
+data Grid = Grid 
+    { gridMap :: HM.HashMap Pos Tile
     , gridMinY :: Int
-    , gridMap :: HM.HashMap (Int, Int) Tile
+    , gridMaxY :: Int
     }
 
 gridFromInput :: Input -> Grid
 gridFromInput input = 
     let positions = input >>= (\(xs, ys) -> (,) <$> xs <*> ys)
         ys = map snd positions
-        maxY = maximum ys
-        minY = minimum ys
-    in Grid maxY minY (foldr (\pos -> HM.insert pos Clay) HM.empty positions)
-
-pprintGrid :: Grid -> String
-pprintGrid g@(Grid _ _ mp) =
-    let positions = HM.keys mp
-        xs = map fst positions
-        ys = map snd positions
-        minX = minimum xs
-        maxX = maximum xs
         minY = minimum ys
         maxY = maximum ys
-    in unlines $ map (\y -> map (\x -> tileAsChar $ getTile (x, y) g) [minX..maxX]) [minY..maxY]
+    in Grid (foldr (\pos -> HM.insert pos Clay) HM.empty positions) minY maxY
 
-getTile :: (Int, Int) -> Grid -> Tile
-getTile pos (Grid maxY minY mp) = HM.lookupDefault Free pos mp
 
-addTile :: (Int, Int) -> Tile -> Grid -> Grid
-addTile (x, y) tile g@(Grid maxY minY mp)
-    | y > maxY  = g
-    | y < minY  = g
-    | otherwise = Grid maxY minY (HM.insert (x, y) tile mp)
+type FlowM a = State Grid a
 
-addFreeTile :: (Int, Int) -> Tile -> Grid -> Grid
-addFreeTile pos tile grid =
-    case getTile pos grid of
-        Free -> addTile pos tile grid
-        _    -> grid
+addTile :: Pos -> Tile -> FlowM ()
+addTile pos tile = modify (\(Grid mp minY maxY) -> Grid (HM.insert pos tile mp) minY maxY)
 
-getWater :: Grid -> [(Int, Int)]
-getWater = map fst . HM.toList . HM.filter (== Water) . gridMap
+getTile :: Pos -> FlowM Tile
+getTile pos = gets (HM.lookupDefault Free pos . gridMap)
 
-getLiquid :: Grid -> [(Int, Int)]
-getLiquid = map fst . HM.toList . HM.filter (\x -> x == Water || x == HardWater) . gridMap
+isInBounds :: Pos -> FlowM Bool
+isInBounds (x, y) = (y <=) <$> gets gridMaxY
 
 
 flow :: Grid -> Grid
-flow grid = go 0 $ addTile (500, max 1 (gridMinY grid)) Water grid
+flow = execState doFlow
   where
-    go l grid =
-        let waters = getWater grid
-            w = length waters
-            grid' = foldr step grid waters
-        in if getLiquid grid /= getLiquid grid' then go w grid' else grid'
-    under (x, y) = (x, y + 1)
-    spreadDir grid [] acc     = (False, acc)
-    spreadDir grid (p:ps) acc
-        | getTile (under p) grid == Free || getTile (under p) grid == Water = (False, p : acc)
-        | getTile p grid == Clay         = (True, acc)
-        | otherwise                      = spreadDir grid ps (p:acc)
-    spread :: (Int, Int) -> Grid -> Grid
-    spread pos@(x, y) grid =
-        let leftPos  = map (\x -> (x, y)) [x,x-1..]
-            rightPos = map (\x -> (x, y)) [x,x+1..]
-            (clayL, lefts)  = spreadDir grid leftPos []
-            (clayR, rights) = spreadDir grid rightPos []
-            tile = if clayL && clayR then HardWater else Water
-        in foldr (\pos -> addTile pos tile) grid (lefts ++ rights)
-    step :: (Int, Int) -> Grid -> Grid
-    step pos grid =
-        let down = under pos
-            tile = getTile down grid
-        in case tile of
-            Water     -> grid
-            HardWater -> spread pos grid
-            Clay      -> spread pos grid
-            Free      -> addTile down Water grid               
-            
+    doFlow :: FlowM ()
+    doFlow = do
+        minY <- gets gridMinY
+        fall (500, max 1 minY)
+    fall :: Pos -> FlowM ()
+    fall pos = do
+        inBounds <- isInBounds pos
+        when inBounds $ do
+            addTile pos Water
+            let underMe = down pos
+            hardBelow <- isHard <$> getTile underMe
+            if hardBelow
+                then scan pos
+                else fall underMe
+    hasClay :: Pos -> FlowM Bool
+    hasClay pos = fmap (== Clay) (getTile pos)
+    stopFlow :: (Pos -> Pos) -> Pos -> FlowM Bool
+    stopFlow shift pos = do
+        b <- (||) <$> fmap (== Free) (getTile (down pos)) <*> hasClay (shift pos)
+        return b
+    scan :: Pos -> FlowM ()
+    scan (x, y) = do
+        let lefts  = map (,y) [x,x-1..]
+            rights = map (,y) [x,x+1..]
+            findX dir xs = fst . fromJust <$> firstM (stopFlow dir) xs
+        minX <- findX left lefts
+        maxX <- findX right rights
+        let toFill   = map (,y) [minX..maxX]
+            leftPos  = (minX, y)
+            rightPos = (maxX, y)
+        clayLeft  <- hasClay (left leftPos)
+        clayRight <- hasClay (right rightPos)
+        if clayLeft && clayRight
+            then do
+                forM_ toFill (`addTile` StillWater)
+                scan (up (x, y))
+            else do
+                forM_ toFill (`addTile` Water)
+                unless clayLeft (fall leftPos)
+                unless clayRight (fall rightPos)
+
 
 solve1 :: Grid -> Int
-solve1 = length . getLiquid . flow
+solve1 = length . HM.filter isLiquid . gridMap
 
 
 main :: IO ()
 main = do
-    input <- readInput <$> readFile "17.txt"
-    let grid = gridFromInput input
+    grid <- flow . gridFromInput . readInput <$> readFile "17.txt"
     putStrLn ("Solution 1: " ++ show (solve1 grid))
