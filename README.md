@@ -11,3 +11,18 @@ everything:
 ```
 runghc N.hs
 ```
+
+### Python
+```
+python N.py
+```
+
+### Rust
+```
+rustc N.rs && ./N
+```
+
+### C
+```
+gcc N.c && ./N
+```
