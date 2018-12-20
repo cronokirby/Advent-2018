@@ -175,7 +175,7 @@ solve2 = takePos . find isLast
 
 main :: IO ()
 main = do
-    gridState <- readGridState <$> readFile "13.txt"
+    gridState <- readGridState <$> readFile "data/13.txt"
     let events = simulate gridState
     putStrLn ("Solution 1: " ++ show (solve1 events))
     putStrLn ("Solution 2: " ++ show (solve2 events))

@@ -15,6 +15,6 @@ solve2 pl = minimum $ map (\c -> solve1 $ filter ((/= c) . toLower) pl) ['a'..'z
 
 main :: IO ()
 main = do
-    input <- readFile "5.txt"
+    input <- readFile "data/5.txt"
     putStrLn ("Solution 1: " ++ show (solve1 input))
     putStrLn ("Solution 2: " ++ show (solve2 input))

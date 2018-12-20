@@ -56,6 +56,6 @@ solve2 rects =
 
 main :: IO ()
 main = do
-    input <- readInput <$> readFile "3.txt"
+    input <- readInput <$> readFile "data/3.txt"
     putStrLn ("Solution 1: " ++ show (solve1 input))
     putStrLn ("Solution 2: " ++ show (solve2 input))

@@ -59,5 +59,5 @@ solve1 points = displayMeta $ go (variance points) 0 points
 
 main :: IO ()
 main = do
-    input <- readInput <$> readFile "10.txt"
+    input <- readInput <$> readFile "data/10.txt"
     putStrLn ("Solutions:\n" ++ solve1 input)

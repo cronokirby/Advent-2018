@@ -146,6 +146,6 @@ solve2 = length . HM.filter (== StillWater) . gridMap
 
 main :: IO ()
 main = do
-    grid <- flow . gridFromInput . readInput <$> readFile "17.txt"
+    grid <- flow . gridFromInput . readInput <$> readFile "data/17.txt"
     putStrLn ("Solution 1: " ++ show (solve1 grid))
     putStrLn ("Solution 2: " ++ show (solve2 grid))

@@ -36,6 +36,6 @@ solve2 = cycle
 
 main :: IO ()
 main = do
-    input <- readInput <$> readFile "1.txt"
+    input <- readInput <$> readFile "data/1.txt"
     putStrLn ("Solution 1: " ++ show (solve1 input))
     putStrLn ("Solution 2: " ++ show (solve2 input))

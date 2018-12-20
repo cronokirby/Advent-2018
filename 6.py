@@ -56,7 +56,7 @@ def solve2(positions):
 
 if __name__ == '__main__':
     positions = []
-    with open('6.txt', 'r') as fp:
+    with open('data/6.txt', 'r') as fp:
         for line in fp.readlines():
             pos = tuple(map(int, line.split(', ')))
             positions.append(pos)

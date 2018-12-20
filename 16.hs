@@ -97,5 +97,5 @@ solve1 = length . filter ((>= 3) . length . uncurry matches)
 
 main :: IO ()
 main = do
-    input1 <- readInput1 <$> readFile "16-1.txt"
+    input1 <- readInput1 <$> readFile "data/16-1.txt"
     putStrLn ("Solution 1: " ++ show (solve1 input1))

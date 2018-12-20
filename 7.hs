@@ -50,6 +50,6 @@ solve2 input = go (solve1' input) [] 0
 
 main :: IO ()
 main = do
-    input <- readInput <$> readFile "7.txt"
+    input <- readInput <$> readFile "data/7.txt"
     putStrLn ("Solution 1: " ++ show (solve1' input))
     putStrLn ("Solution 2: " ++ show (solve2 input))

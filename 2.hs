@@ -32,6 +32,6 @@ solve2 = fmap snd . go HS.empty . (substrings =<<)
 
 main :: IO ()
 main = do
-    input <- readInput <$> readFile "2.txt"
+    input <- readInput <$> readFile "data/2.txt"
     putStrLn ("Solution 1: " ++ show (solve1 input))
     putStrLn ("Solution 2: " ++ show (solve2 input))

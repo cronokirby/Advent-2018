@@ -34,6 +34,6 @@ solve2 (Tree ts is) = sum . catMaybes $ map (\i -> solve2 <$> ind i ts) is
 
 main :: IO ()
 main = do
-    tree <- readInput <$> readFile "8.txt"
+    tree <- readInput <$> readFile "data/8.txt"
     putStrLn ("Solution 1: " ++ show (solve1 tree))
     putStrLn ("Solution 2: " ++ show (solve2 tree))

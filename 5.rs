@@ -26,7 +26,7 @@ fn count_cancel(data: &str, ignore: Option<char>) -> i32 {
 }
 
 fn main() {
-    let mut file = File::open("5.txt").expect("Couldn't open input file");
+    let mut file = File::open("data/5.txt").expect("Couldn't open input file");
     let mut data = String::new();
     file.read_to_string(&mut data).expect("Couldn't read input file");
 

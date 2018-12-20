@@ -33,7 +33,7 @@ int count_canceled(char* data, char* stack, char ignore) {
 }
 
 int main() {
-    FILE* fp = fopen("5.txt", "r");
+    FILE* fp = fopen("data/5.txt", "r");
     fseek(fp, 0L, SEEK_END);
     int size = ftell(fp);
     rewind(fp);

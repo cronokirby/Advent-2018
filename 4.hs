@@ -87,6 +87,6 @@ solve2 = hash . maximumBy (compare `on` maximum . snd) . HM.toList . makeGuardMa
 
 main :: IO ()
 main = do
-    input <- readInput <$> readFile "4.txt"
+    input <- readInput <$> readFile "data/4.txt"
     putStrLn ("Solution 1: " ++ show (solve1 input))
     putStrLn ("Solution 2: " ++ show (solve2 input))

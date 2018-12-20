@@ -36,6 +36,6 @@ simulate gens limit (firstRow, rules) =
 
 main :: IO ()
 main = do
-    input <- readInput <$> readFile "12.txt"
+    input <- readInput <$> readFile "data/12.txt"
     putStrLn ("Solution 1: " ++ show (simulate 20 20 input))
     putStrLn ("Solution 2: " ++ show (simulate 50000000000 200 input))
