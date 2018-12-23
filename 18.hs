@@ -70,7 +70,8 @@ stepYard y@(Yard mnX mxX mnY mxY grd) =
     transition Trees  = Lumber
     transition Lumber = Open
     countNextTo :: Yard -> (Int, Int) -> YardTile -> Int
-    countNextTo yard pos target = length $ filter (== target) (adjacent yard pos)
+    countNextTo yard pos target = 
+        length $ filter (== target) (adjacent yard pos)
     shouldTransition :: Yard -> (Int, Int) -> YardTile -> Bool
     shouldTransition yard pos Open  = 
         countNextTo yard pos Trees >= 3 
@@ -98,7 +99,8 @@ solve1 = resources . (!! 10) . iterate stepYard
 solve2 :: Yard -> Int -> Int
 solve2 yard limit = resources $ go yard 0 HM.empty
   where
-    insCounted k v = HM.insertWith (\(newV, _) (_, count) -> (newV, count + 1)) k (v, 1)
+    insCounted k v = 
+        HM.insertWith (\(newV, _) (_, count) -> (newV, count + 1)) k (v, 1)
     go yard i mp =
         let r = resources yard
         in case HM.lookup r mp of
