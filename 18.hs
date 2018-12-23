@@ -1,7 +1,6 @@
 {-# LANGUAGE RecordWildCards #-}
 import Data.Array (Array, Ix, (!), array, assocs, bounds, elems, listArray)
 import Data.List (intercalate)
-import Debug.Trace
 import qualified Data.HashMap.Strict as HM
 
 
