@@ -2,6 +2,7 @@
 import Data.Array (Array, Ix, (!), array, assocs, bounds, elems, listArray)
 import Data.List (intercalate)
 import Debug.Trace
+import qualified Data.HashMap.Strict as HM
 
 
 data YardTile = Open | Trees | Lumber deriving (Eq, Show)
@@ -95,7 +96,20 @@ solve1 :: Yard -> Int
 solve1 = resources . (!! 10) . iterate stepYard
 
 
+solve2 :: Yard -> Int -> Int
+solve2 yard limit = resources $ go yard 0 HM.empty
+  where
+    insCounted k v = HM.insertWith (\(newV, _) (_, count) -> (newV, count + 1)) k (v, 1)
+    go yard i mp =
+        let r = resources yard
+        in case HM.lookup r mp of
+            Just (lastI, c) | c > 2 ->
+                iterate stepYard yard !! ((limit - i) `mod` (i - lastI))
+            _ -> go (stepYard yard) (i + 1) (insCounted r i mp)
+
+
 main :: IO ()
 main = do
     yard <- readYard <$> readFile "data/18.txt"
     putStrLn ("Solution 1: " ++ show (solve1 yard))
+    putStrLn ("Solution 2: " ++ show (solve2 yard 1000))
